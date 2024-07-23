@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue'
-import { openDB } from 'idb';
+import { IDBPDatabase, openDB } from 'idb';
 import useFirebase from '../composables/useFirebase'
 
 export type Verse = {
@@ -99,7 +99,7 @@ const books: Book[] = [
     { id: 66, name: 'Revelation', chapters: 22 }
 ];
 
-export async function useBible() {
+export function useBible() {
     const { callFunction } = useFirebase();
 
     const currentChapter = ref(1);
@@ -111,28 +111,41 @@ export async function useBible() {
     });
 
     const verses = ref<Verse[]>([]);
-    
-    const db = await openDB("BibleDB", 1, {
-        upgrade(db, oldVersion, newVersion, transaction, event) {
-          const versesStore = db.createObjectStore("verses", { keyPath: "id" });
-          versesStore.createIndex("version_book_chapter", ["version", "bookNum", "chapterNum"]);
-          versesStore.createIndex('version', 'version');
-          const versionsStore = db.createObjectStore("versions", { keyPath: "id" });
-        }
-    });
 
-    const loadChapter = async (bookNum: number, chapterNum: number) => {
+    let db: IDBPDatabase | null = null;
+    
+    const initialize = async() => {
+        db = await openDB("BibleDB", 1, {
+            upgrade(db, oldVersion, newVersion, transaction, event) {
+              const versesStore = db.createObjectStore("verses", { keyPath: "id" });
+              versesStore.createIndex("version_book_chapter", ["version", "bookNum", "chapterNum"]);
+              versesStore.createIndex('version', 'version');
+              const versionsStore = db.createObjectStore("versions", { keyPath: "id" });
+            }
+        });
+    }
+  
+    const loadChapter = async (version: string, bookNum: number, chapterNum: number) => {
+        if (!db) {
+            return;
+        }
+        
         const transaction = db.transaction('verses', 'readonly');
         const store = transaction.objectStore('verses');
         const index = store.index('version_book_chapter');
-        const key = [currentVersion.value, bookNum, chapterNum];
+        const key = [version, bookNum, chapterNum];
         const versesData = await index.getAll(key);
+        currentVersion.value = version;
         currentBook.value = bookNum;
         currentChapter.value = chapterNum;
         verses.value = versesData;
     };
 
     const deleteVersion = async (version: string) => {
+        if (!db) {
+            return;
+        }
+
         //clear out existing version from IndexedDB if it exists
         const tx = db.transaction('verses', 'readwrite');
         const index = tx.store.index('version');
@@ -151,6 +164,10 @@ export async function useBible() {
     };
 
     const getVersions = async () => {
+        if (!db) {
+            return null;
+        }
+
         const tx = db.transaction('versions', 'readonly');
         const store = tx.objectStore('versions');
         const versions = await store.getAll();
@@ -158,10 +175,18 @@ export async function useBible() {
     };
 
     const downloadVersion = async (version: string) => {  
+        if (!db) {
+            return;
+        }
+
         await deleteVersion(version);
 
         //download version book-by-book from Firebase
         books.forEach(async book => {
+            if (!db) {
+                return;
+            }
+
             const response = await callFunction('downloadVersion', { version, book: book.id });
             if (response.err)
             {
@@ -208,6 +233,7 @@ export async function useBible() {
         currentVersion,
         verses,
         books,
+        initialize,
         loadChapter,
         deleteVersion,
         getVersions,
