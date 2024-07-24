@@ -16,7 +16,7 @@ import {
     updateEmail,
     sendPasswordResetEmail 
 } from "firebase/auth";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, getBlob } from "firebase/storage";
 import { ref } from 'vue'
 import { 
     collection, 
@@ -276,6 +276,8 @@ export default function useFirebase() {
         return getAuth(firebaseApp);
     }
 
+    // ---ANALYTICS---
+
     const logAnalyticsEvent = (event: string, data: any) => {
         const analytics = getAnalytics();
         logEvent(analytics, event, data);
@@ -285,6 +287,8 @@ export default function useFirebase() {
         const analytics = getAnalytics();
         setUserProperties(analytics, properties);
     }
+
+    //---FIRESTORE---
 
     const getDocument = async(coll: string, docId: string) => {
         const db = getFirestore();
@@ -396,6 +400,8 @@ export default function useFirebase() {
         return dataArr;
     }
 
+    //---FUNCTIONS---
+
     const callFunction: any = async(fname: string, data: any) => {
         try {
             const functions = getFunctions();
@@ -408,6 +414,14 @@ export default function useFirebase() {
                 err: err
             }
         }
+    }
+
+    //---STORAGE---
+
+    const getFileDownloadUrl = async(path: string) => {
+        const storage = getStorage();
+        const ref = storageRef(storage, path);
+        return await getDownloadURL(ref);
     }
 
     return {
@@ -431,6 +445,7 @@ export default function useFirebase() {
         signInWithGoogle,
         signInWithFacebook,
         setProfilePhoto,
-        updateProfileInfo
+        updateProfileInfo,
+        getFileDownloadUrl
     }
 }

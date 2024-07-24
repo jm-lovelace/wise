@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h5>{{ currentChapterLabel }} ({{ currentVersion.toUpperCase() }})</h5>
+    <h5>{{ chapterLabel }} ({{ currentVersion.toUpperCase() }})</h5>
     <template v-for="(item, i) in renderItems">
       <h6 v-if="item.type === 'heading'">{{ item.content }}</h6>
       <div class="subtitle2" v-else-if="item.type === 'subheading'">{{ item.content }}</div>
@@ -10,23 +10,25 @@
 </template>
 
 <script setup lang="ts">
-import { useBible, VerseType } from '../composables/useBible';
-import { ref, onMounted, computed, watchEffect } from 'vue';
+import { PageManager } from '../composables/usePageManager';
+import { ref, onMounted, computed } from 'vue';
+import { VerseType } from '../stores/bible-store';
 
-const { loadChapter, initialize, currentChapter, currentBook, currentChapterLabel, currentVersion, verses } = useBible();
+const manager = new PageManager();
 
-interface PageViewProps {
-  startBook: number;
-  startChapter: number;
-  startVersion: string;
-}
+const { 
+  verses, 
+  chapterLabel, 
+  currentVersion,
+  currentBook,
+  currentChapter,
+  loadChapter, 
+} = manager;
 
 type RenderedItem = {
   type: string;
   content: string;
 };
-
-const props = defineProps<PageViewProps>();
 
 const renderItems = computed(() => {
   if (!verses.value) return [];
@@ -56,28 +58,11 @@ const renderItems = computed(() => {
 });
 
 const emit = defineEmits<{
-  change: [value: { book: number; chapter: number; version: string; label: string }]
+  initialized: [value: PageManager]
 }>();
 
 onMounted(async() => {
-  await initialize();
-  await loadChapter(props.startVersion, props.startBook, props.startChapter);
-  emit('change', {
-    book: props.startBook,
-    chapter: props.startChapter,
-    version: props.startVersion,
-    label: currentChapterLabel.value,
-  });
-});
-
-watchEffect(async () => {
-  await loadChapter(props.startVersion, props.startBook, props.startChapter);
-  emit('change', {
-    book: props.startBook,
-    chapter: props.startChapter,
-    version: props.startVersion,
-    label: currentChapterLabel.value,
-  });
+  emit('initialized', manager);
 });
 
 </script>
