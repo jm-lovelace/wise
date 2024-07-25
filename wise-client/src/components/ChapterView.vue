@@ -1,21 +1,39 @@
 <template>
   <div class="chapter-view-container q-px-md" :id="rootId" style="height: 100%">
     <q-scroll-area :style="{ height: `${height}px` }">
-      <h5 class="text-bold q-mt-sm q-mb-lg">{{ chapterLabel }} ({{ currentVersion.toUpperCase() }})</h5>
+      <h5 class="text-bold q-mt-sm q-mb-none">{{ chapterLabel }} ({{ currentVersion.toUpperCase() }})</h5>
       <template v-for="(item, i) in renderItems" :key="i">
-        <h6 v-if="item.type === 'heading'" class="q-mt-sm q-mb-md">{{ item.content }}</h6>
+        <h6 v-if="item.type === 'heading'" class="q-mt-lg q-mb-md">{{ item.content }}</h6>
         <div class="subtitle2" v-else-if="item.type === 'subheading'">{{ item.content }}</div>
-        <p v-else>
-          <span v-for="(pPart, p) in item.content">
-            <span v-if="(pPart as any).verse > -1" class="verse-number">{{ (pPart as any).verse }}</span>
-            {{ (pPart as any).text }}
+        <p v-else class="q-mt-lg">
+          <span v-for="(pPart, p) in item.content" @click="toggleVerseRangeSelection((pPart as VersePart).verse)" :class="(pPart as VersePart).selected ? 'selected-verse' : ''">
+            <span v-if="(pPart as VersePart).startOfVerse" class="verse-number">{{ (pPart as VersePart).verse }}</span>
+            {{ (pPart as VersePart).text }}
           </span>
         </p>
       </template>
       <div style="height: 5em"></div>
     </q-scroll-area>
-    <q-btn class="nav-btn left" color="primary" round icon="arrow_back" @click="loadChapter(currentVersion, currentBook, currentChapter - 1)" />
-    <q-btn class="nav-btn right" color="primary" round icon="arrow_forward" @click="loadChapter(currentVersion, currentBook, currentChapter + 1)" />
+    <q-chip v-if="selectedVerses.length > 0" color="accent" text-color="white" :label="selectedVersesLabel" icon="book" class="text-bold selected-verse-tag">
+      <q-menu>
+        <q-list >
+          <q-item clickable v-ripple @click="copySelectionToClipboard">
+            <q-item-section avatar>
+              <q-icon name="content_copy" />
+            </q-item-section>
+            <q-item-section>Copy Text</q-item-section>
+          </q-item>
+          <q-item clickable v-ripple @click="shareSelection">
+            <q-item-section avatar>
+              <q-icon name="share" />
+            </q-item-section>
+            <q-item-section>Share</q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-chip>
+    <q-btn class="nav-btn left" color="primary" round icon="arrow_back" :disable="currentChapter <= 1" @click="loadChapter(currentVersion, currentBook, currentChapter - 1)" />
+    <q-btn class="nav-btn right" color="primary" round icon="arrow_forward" :disable="currentChapter >= currentBookChapters" @click="loadChapter(currentVersion, currentBook, currentChapter + 1)" />
   </div>
 </template>
 
@@ -62,12 +80,33 @@ const {
   currentVersion,
   currentBook,
   currentChapter,
-  loadChapter, 
+  currentBookChapters,
+  selectedVerses,
+  selectedVersesLabel,
+  loadChapter,
+  toggleVerseRangeSelection,
+  copySelectionToClipboard,
+  shareSelection
 } = manager;
+
+const selectedLabel = computed(() => {
+  if (selectedVerses.value.length === 1) {
+    return `Selected: ${selectedVerses.value[0]}`;
+  } else {
+    return `Selected: ${selectedVerses.value[0]}-${selectedVerses.value[selectedVerses.value.length - 1]}`;
+  }
+});
 
 type RenderedItem = {
   type: string;
-  content: string | {verse: number, text: string}[];
+  content: string | VersePart[];
+};
+
+type VersePart = {
+  verse: number;
+  text: string;
+  selected: boolean;
+  startOfVerse: boolean;
 };
 
 const renderItems = computed(() => {
@@ -84,14 +123,14 @@ const renderItems = computed(() => {
       
       //continue paragraph from previous verse
       if (paragraphs[0] !== "") {
-        (acc[acc.length - 1].content as {verse: number, text: string}[])
-          .push({ verse: item.verseNum, text: paragraphs[0]});
+        (acc[acc.length - 1].content as VersePart[])
+          .push({ verse: item.verseNum, startOfVerse: true, text: paragraphs[0], selected: selectedVerses.value.includes(item.verseNum) });  
       }
 
       //start new paragraphs
       for (let i = 1; i < paragraphs.length; i++) {
-        const verseNum = i === 1 && paragraphs[0] === "" ? item.verseNum : -1;
-        acc.push({ type: VerseType.Verse, content: [{ verse:  verseNum, text: paragraphs[i]}] });
+        const startOfVerse = i === 1 && paragraphs[0] === "";
+        acc.push({ type: VerseType.Verse, content: [{ verse:  item.verseNum, startOfVerse: startOfVerse, text: paragraphs[i], selected: selectedVerses.value.includes(item.verseNum) }] });
       }
     }
 
@@ -109,6 +148,10 @@ const renderItems = computed(() => {
   margin-left: 0.5em;
 }
 
+.selected-verse {
+  background-color: #f0f0f0;
+}
+
 .chapter-view-container {
   position: relative;
 }
@@ -118,11 +161,18 @@ const renderItems = computed(() => {
   bottom: 16px;
 }
 
+.selected-verse-tag {
+  position: absolute;
+  top: 16px;
+  right: 30px;
+  cursor: pointer;
+}
+
 .nav-btn.left {
-  left: 16px;
+  left: 30px;
 }
 
 .nav-btn.right {
-  right: 16px;
+  right: 30px;
 }
 </style>
