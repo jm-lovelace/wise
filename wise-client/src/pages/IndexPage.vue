@@ -1,6 +1,6 @@
 <template>
-  <q-page class="row items-center justify-evenly">
-    <ChapterView @initialized="setPageManager" />
+  <q-page>
+    <ChapterView @initialized="setPageManager" style="height: 90vh" />
   </q-page>
 </template>
 
@@ -17,7 +17,9 @@ const bibleStore = useBibleStore();
 const setPageManager = async(value: PageManager) => {
   manager = value;
 
-  await bibleStore.downloadVersion('esv');
+  await bibleStore.loadVersions();
+
+  //await bibleStore.downloadVersion('esv');
   await manager.loadChapter('esv', 1, 1);
 };
 

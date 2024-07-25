@@ -137,7 +137,8 @@ export const useBibleStore = defineStore('bible', {
       const tx = db.transaction('versions', 'readonly');
       const store = tx.objectStore('versions');
       const versions = await store.getAll();
-      return versions as Version[];
+
+      this.versions = versions as Version[];
     },
     async deleteVersion(version: string) {
       if (!db) {
@@ -172,9 +173,8 @@ export const useBibleStore = defineStore('bible', {
 
       //download version csv from Firebase
       const csvUrl = await getFileDownloadUrl(`versions/${version}.csv`);
-
-      const tx = db.transaction('verses', 'readwrite');
-      const store = tx.objectStore('verses');
+  
+      const verses = [] as Verse[];
 
       //parse csv
       Papa.parse(csvUrl, {
@@ -183,24 +183,32 @@ export const useBibleStore = defineStore('bible', {
         step: async function(results) {
           const row = results.data as string[];
           const verse = {
-              id: row[0],
-              rawText: row[1]
+            id: row[0],
+            rawText: row[1]
           }
           
           const verseRecord: Verse = {
-              id: `${version}-${verse.id}`,
-              type: verse.id.startsWith('h') ? VerseType.Heading : verse.id.startsWith('s') ? VerseType.Subheading : VerseType.Verse,
-              version: version,
-              bookNum: parseInt(verse.id.substring(1,3)),
-              chapterNum: parseInt(verse.id.substring(3,5)),
-              verseNum: parseInt(verse.id.substring(6,9)),
-              rawText: verse.rawText
+            id: `${version}-${verse.id}`,
+            type: verse.id.startsWith('h') ? VerseType.Heading : verse.id.startsWith('s') ? VerseType.Subheading : VerseType.Verse,
+            version: version,
+            bookNum: parseInt(verse.id.substring(1,3)),
+            chapterNum: parseInt(verse.id.substring(3,6)),
+            verseNum: parseInt(verse.id.substring(6,9)),
+            rawText: verse.rawText
           }
 
-          await store.put(verseRecord);
+          verses.push(verseRecord);
         },
         complete: async function() {
           if (!db) return;
+
+          //update verses table
+          const tx = db.transaction('verses', 'readwrite');
+          const store = tx.objectStore('verses');  
+          verses.forEach(verse => {
+            store.put(verse);
+          });   
+          await tx.done;
 
           //update versions table
           const versionTx = db.transaction('versions', 'readwrite');
@@ -208,13 +216,9 @@ export const useBibleStore = defineStore('bible', {
           const versionRecord: Version = { id: version, name: version, dateUpdated: Date.now() };
           await versionsStore.put(versionRecord);
           _this.versions.push(versionRecord);
-          
-          await tx.done;
         },
         error: async function(error) {
           console.error('Error parsing CSV:', error);
-
-          await tx.abort();
           await _this.deleteVersion(version);
         }
       });

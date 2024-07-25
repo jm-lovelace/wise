@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { IDBPDatabase, openDB } from 'idb';
-import { Verse, Book, Version, books, useBibleStore } from '../stores/bible-store'
+import { Verse, Book, Version, books, useBibleStore, VerseType } from '../stores/bible-store'
 import { storeToRefs } from 'pinia';
 
 export class PageManager {
@@ -32,6 +32,15 @@ export class PageManager {
         }   
 
         this.verses.value = await this.store.getChapter(version, book, chapter);
+
+        this.verses.value.sort((a, b) => a.verseNum - b.verseNum)
+        .sort((a, b) => {
+            // If verseNum is the same, sort by type in the specified order
+            const typeOrder = [VerseType.Heading, VerseType.Subheading, VerseType.Verse];
+            return typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type);
+        });
+
+        console.log(this.verses.value); 
     }
 }
 
