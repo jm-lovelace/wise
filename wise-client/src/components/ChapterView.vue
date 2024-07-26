@@ -1,5 +1,5 @@
 <template>
-  <div class="chapter-view-container q-px-md" :id="rootId" style="height: 100%">
+  <div class="chapter-view-container q-px-md" :id="id" style="height: 100%">
     <q-scroll-area :style="{ height: `${height}px` }">
       <h5 class="text-bold q-mt-sm q-mb-none">{{ chapterLabel }} ({{ currentVersion.toUpperCase() }})</h5>
       <template v-for="(item, i) in renderItems" :key="i">
@@ -39,23 +39,41 @@
 
 <script setup lang="ts">
 import { ReaderManager } from '../composables/useReaderManager';
-import { onMounted, computed, ref, nextTick, onBeforeUnmount } from 'vue';
+import { onMounted, computed, ref, nextTick, onBeforeUnmount, watch } from 'vue';
 import { VerseType } from '../stores/bible-store';
-
-const manager = new ReaderManager();
 
 const height = ref(0);
 let resizeObserver: ResizeObserver | null = null;
 
-const rootId = ref(`view-${Math.random().toString(36).slice(2, 10)}`);
-const rootElem = computed(() => document.getElementById(rootId.value) as HTMLCanvasElement);
+interface ChapterViewProps {
+  manager: ReaderManager;
+}
+
+const props = defineProps<ChapterViewProps>();
 
 const emit = defineEmits<{
-  initialized: [value: ReaderManager]
+  'labelChanged': [value: string]
 }>();
 
+const { 
+  id,
+  verses, 
+  chapterLabel, 
+  currentVersion,
+  currentBook,
+  currentChapter,
+  currentBookChapters,
+  selectedVerses,
+  selectedVersesLabel,
+  loadChapter,
+  toggleVerseRangeSelection,
+  copySelectionToClipboard,
+  shareSelection
+} = props.manager;
+
+const rootElem = computed(() => document.getElementById(id) as HTMLCanvasElement);
+
 onMounted(async() => {
-  emit('initialized', manager);
   await nextTick();
 
   resizeObserver = new ResizeObserver(onResize);
@@ -74,20 +92,9 @@ const onResize = () => {
   height.value = rootElem.value.clientHeight || 0
 };
 
-const { 
-  verses, 
-  chapterLabel, 
-  currentVersion,
-  currentBook,
-  currentChapter,
-  currentBookChapters,
-  selectedVerses,
-  selectedVersesLabel,
-  loadChapter,
-  toggleVerseRangeSelection,
-  copySelectionToClipboard,
-  shareSelection
-} = manager;
+watch(chapterLabel, () => {
+  emit('labelChanged', chapterLabel.value);
+});
 
 const selectedLabel = computed(() => {
   if (selectedVerses.value.length === 1) {

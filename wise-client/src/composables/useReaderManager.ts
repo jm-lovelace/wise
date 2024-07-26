@@ -7,6 +7,7 @@ export class ReaderManager {
     private store: any;
     private versions = ref<Version[]>([]);
 
+    public id: string;
     public currentBook = ref(1);
     public currentChapter = ref(1);
     public currentVersion = ref('esv');
@@ -25,7 +26,8 @@ export class ReaderManager {
         return books.find(b => b.id === this.currentBook.value)?.chapters ?? 1;
     });
 
-    constructor() {
+    constructor(id: string) {
+        this.id = id;
         this.store = useBibleStore();
         const { versions } = storeToRefs(this.store);
         this.versions = versions;
