@@ -3,7 +3,7 @@ import { IDBPDatabase, openDB } from 'idb';
 import { Verse, Book, Version, books, useBibleStore, VerseType } from '../stores/bible-store'
 import { storeToRefs } from 'pinia';
 
-export class PageManager {
+export class ReaderManager {
     private store: any;
     private versions = ref<Version[]>([]);
 

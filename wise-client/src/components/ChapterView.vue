@@ -38,11 +38,11 @@
 </template>
 
 <script setup lang="ts">
-import { PageManager } from '../composables/usePageManager';
+import { ReaderManager } from '../composables/useReaderManager';
 import { onMounted, computed, ref, nextTick, onBeforeUnmount } from 'vue';
 import { VerseType } from '../stores/bible-store';
 
-const manager = new PageManager();
+const manager = new ReaderManager();
 
 const height = ref(0);
 let resizeObserver: ResizeObserver | null = null;
@@ -51,7 +51,7 @@ const rootId = ref(`view-${Math.random().toString(36).slice(2, 10)}`);
 const rootElem = computed(() => document.getElementById(rootId.value) as HTMLCanvasElement);
 
 const emit = defineEmits<{
-  initialized: [value: PageManager]
+  initialized: [value: ReaderManager]
 }>();
 
 onMounted(async() => {
