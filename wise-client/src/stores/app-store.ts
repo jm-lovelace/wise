@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export enum TabType {
   Reader = "reader",
+  ChapterSelection = "chapter-selection",
   Notes = "notes",
   Map = "map",
   Iframe = "iframe"
@@ -22,7 +23,7 @@ export type AppState = {
   activeTabs: string[]
 }
 
-const readerManagers: ReaderManager[] = [];
+export const readerManagers: { [key: string]: ReaderManager } = {};
 
 export const useAppStore = defineStore('app', {
   state: (): AppState => ({
@@ -41,13 +42,13 @@ export const useAppStore = defineStore('app', {
       const id = uuidv4();
       const tab: Tab = {
         id: id,
-        type: TabType.Reader,
-        label: "",
+        type: TabType.ChapterSelection,
+        label: "Select Chapter",
         pane: pane,
         index: this.openTabs.filter(t => t.pane === pane).length
       };
 
-      readerManagers.push(new ReaderManager(id));;
+      readerManagers[id] = (new ReaderManager(id));
 
       this.openTabs.push(tab);
       this.activeTabs[pane] = id
@@ -58,9 +59,9 @@ export const useAppStore = defineStore('app', {
         return;
       }
 
-      const readerManager = readerManagers.find(rm => rm.id === id);
+      const readerManager = readerManagers[id];
       if (readerManager) {
-        readerManagers.splice(readerManagers.indexOf(readerManager), 1);
+        delete readerManagers[id];
       }
 
       this.openTabs.splice(this.openTabs.indexOf(tab), 1);

@@ -10,7 +10,8 @@ export type Version = {
 }
 
 export type BibleState = {
-  versions: Version[]
+  versions: Version[],
+  userDefaultVersion: string
 }
 
 export type Verse = {
@@ -124,6 +125,7 @@ const { getFileDownloadUrl } = useFirebase();
 export const useBibleStore = defineStore('bible', {
   state: (): BibleState => ({
     versions: [],
+    userDefaultVersion: 'esv'
   }),
   getters: {
 

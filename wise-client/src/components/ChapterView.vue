@@ -1,7 +1,7 @@
 <template>
-  <div class="chapter-view-container q-px-md" :id="id" style="height: 100%">
+  <div class="chapter-view-container q-px-sm" :id="id" style="height: 100%">
     <q-scroll-area :style="{ height: `${height}px` }">
-      <h5 class="text-bold q-mt-sm q-mb-none">{{ chapterLabel }} ({{ currentVersion.toUpperCase() }})</h5>
+      <h5 class="text-bold q-mt-sm q-mb-none">{{ chapterLabel }}</h5>
       <template v-for="(item, i) in renderItems" :key="i">
         <h6 v-if="item.type === 'heading'" class="q-mt-lg q-mb-md">{{ item.content }}</h6>
         <div class="subtitle2" v-else-if="item.type === 'subheading'">{{ item.content }}</div>
@@ -80,6 +80,8 @@ onMounted(async() => {
   if (rootElem.value) {
     resizeObserver.observe(rootElem.value);
   }
+
+  emit('labelChanged', chapterLabel.value);
 });
 
 onBeforeUnmount(() => {

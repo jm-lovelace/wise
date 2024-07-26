@@ -7,7 +7,7 @@
       :style="{ height: `${pageHeight}px` }"
     >
       <template v-slot:before>
-        <ChapterView @initialized="setPageManager" style="height: 100vh" />
+        <TabPane :paneNumber="0" style="height: 100vh" />
       </template>
 
       <template v-slot:separator>
@@ -23,27 +23,21 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import ChapterView from '../components/ChapterView.vue';
+import TabPane from '../components/TabPane.vue';
 import NotesEditor from '../components/NotesEditor.vue';
 import { ReaderManager } from '../composables/useReaderManager';
 import { useBibleStore } from '../stores/bible-store';
+import { useAppStore } from '../stores/app-store';
 
 let manager: ReaderManager | null = null;
 
 const bibleStore = useBibleStore();
 
+const appStore = useAppStore();
+
 const splitter = ref<number>(45);
 
 const pageHeight = ref(0);
-
-const setPageManager = async(value: ReaderManager) => {
-  manager = value;
-
-  await bibleStore.loadVersions();
-
-  //await bibleStore.downloadVersion('esv');
-  await manager.loadChapter('esv', 1, 1);
-};
 
 const onResize = () => {
   pageHeight.value = window.innerHeight;
@@ -52,6 +46,8 @@ const onResize = () => {
 onMounted(() => {
   window.addEventListener('resize', onResize);
   onResize();
+
+  appStore.newReaderTab(0);
 });
 
 onBeforeUnmount(() => {

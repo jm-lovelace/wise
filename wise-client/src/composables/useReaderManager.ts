@@ -19,7 +19,7 @@ export class ReaderManager {
     });
 
     public chapterLabel = computed(() => {
-        return `${this.currentBookName.value} ${this.currentChapter.value}`;
+        return `${this.currentBookName.value} ${this.currentChapter.value} (${this.currentVersion.value.toUpperCase()})`;
     });
 
     public currentBookChapters = computed(() => {
@@ -31,6 +31,8 @@ export class ReaderManager {
         this.store = useBibleStore();
         const { versions } = storeToRefs(this.store);
         this.versions = versions;
+
+        this.loadChapter('esv', 1, 1);
     }
 
     loadChapter = async (version: string, book: number, chapter: number) => {
