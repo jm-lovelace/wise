@@ -2,6 +2,15 @@
   <div class="chapter-view-container q-px-sm" :id="id" style="height: 100%">
     <q-scroll-area :style="{ height: `${height}px` }">
       <h5 class="text-bold q-mt-sm q-mb-none">{{ chapterLabel }}</h5>
+      <q-btn no-caps flat class="text-grey q-px-none" icon-right="expand_more" :label="currentVersionLabel">
+        <q-menu>
+          <q-list dense>
+            <q-item v-for="(version, v) in versionList" clickable v-ripple @click="loadChapter(version.id, currentBook, currentChapter)">
+              <q-item-section>{{ version.label }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
       <template v-for="(item, i) in renderItems" :key="i">
         <h6 v-if="item.type === 'heading'" class="q-mt-lg q-mb-md">{{ item.content }}</h6>
         <div class="subtitle2" v-else-if="item.type === 'subheading'">{{ item.content }}</div>
@@ -16,7 +25,7 @@
     </q-scroll-area>
     <q-chip v-if="selectedVerses.length > 0" color="accent" text-color="white" :label="selectedVersesLabel" icon="book" class="text-bold selected-verse-tag">
       <q-menu>
-        <q-list >
+        <q-list dense>
           <q-item clickable v-ripple @click="copySelectionToClipboard">
             <q-item-section avatar>
               <q-icon name="content_copy" />
@@ -40,7 +49,7 @@
 <script setup lang="ts">
 import { ReaderManager } from '../composables/useReaderManager';
 import { onMounted, computed, ref, nextTick, onBeforeUnmount, watch } from 'vue';
-import { VerseType } from '../stores/bible-store';
+import { VerseType, versionNames } from '../stores/bible-store';
 
 const height = ref(0);
 let resizeObserver: ResizeObserver | null = null;
@@ -68,7 +77,8 @@ const {
   loadChapter,
   toggleVerseRangeSelection,
   copySelectionToClipboard,
-  shareSelection
+  shareSelection,
+  versions
 } = props.manager;
 
 const rootElem = computed(() => document.getElementById(id) as HTMLCanvasElement);
@@ -95,7 +105,16 @@ const onResize = () => {
 };
 
 watch(chapterLabel, () => {
-  emit('labelChanged', chapterLabel.value);
+  emit('labelChanged', `${chapterLabel.value} (${currentVersion.value.toUpperCase()})`);
+});
+
+const currentVersionLabel = computed(() => {
+  const version = versions.value.find(v => v.id === currentVersion.value);
+  return version ? `${versionNames[version.id]} (${version.id.toUpperCase()})` : '';
+});
+
+const versionList = computed(() => {
+  return versions.value.map(v => { return { ...v, label: `${versionNames[v.id]} (${v.id.toUpperCase()})` }});
 });
 
 const selectedLabel = computed(() => {

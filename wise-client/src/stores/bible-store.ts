@@ -5,7 +5,6 @@ import Papa from "papaparse";
 
 export type Version = {
   id: string,
-  name: string,
   dateUpdated: number
 }
 
@@ -34,6 +33,15 @@ export type Book = {
   id: number;
   name: string;
   chapters: number;
+}
+
+export const versionNames: { [key: string]: string } = {
+  "esv": "English Standard Version",
+  "kjv": "King James Version",
+  "niv": "New International Version",
+  "nlt": "New Living Translation",
+  "msg": "The Message",
+  "nasb": "New American Standard Bible"
 }
 
 export const books: Book[] = [
@@ -215,7 +223,7 @@ export const useBibleStore = defineStore('bible', {
           //update versions table
           const versionTx = db.transaction('versions', 'readwrite');
           const versionsStore = versionTx.objectStore('versions');
-          const versionRecord: Version = { id: version, name: version, dateUpdated: Date.now() };
+          const versionRecord: Version = { id: version, dateUpdated: Date.now() };
           await versionsStore.put(versionRecord);
           _this.versions.push(versionRecord);
         },

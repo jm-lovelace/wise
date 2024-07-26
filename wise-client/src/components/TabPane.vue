@@ -18,6 +18,7 @@
                 @remove="appStore.closeTab(tab.id)"
                 class="q-pr-none"
             >
+            <q-icon size="xs" :name="iconMapping[tab.type]" class="q-mr-xs" />
             {{ tab.label }}
             <q-btn size="xs" class="q-pt-xs q-ml-sm q-px-xs" flat icon="more_vert">
                 <q-menu>
@@ -85,6 +86,13 @@ const activeTab = computed({
         activeTabs.value[props.paneNumber] = value;
     }
 });
+
+const iconMapping: { [key: string]: string } = {
+    [TabType.Reader]: 'book',
+    [TabType.ChapterSelection]: 'book',
+    [TabType.Notes]: 'note',
+    [TabType.Iframe]: 'language'
+};
 
 const chapterSelected = async(version: string, book: number, chapter: number) => {
     const tab = tabs.value.find(tab => tab.id == activeTab.value);

@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia';
 
 export class ReaderManager {
     private store: any;
-    private versions = ref<Version[]>([]);
+    public versions = ref<Version[]>([]);
 
     public id: string;
     public currentBook = ref(1);
@@ -19,7 +19,7 @@ export class ReaderManager {
     });
 
     public chapterLabel = computed(() => {
-        return `${this.currentBookName.value} ${this.currentChapter.value} (${this.currentVersion.value.toUpperCase()})`;
+        return `${this.currentBookName.value} ${this.currentChapter.value}`;
     });
 
     public currentBookChapters = computed(() => {
