@@ -15,7 +15,7 @@
       </template>
 
       <template v-slot:after>
-        <NotesEditor />
+        <NotesEditor style="height: 90vh" />
       </template>
     </q-splitter>
   </q-page>
