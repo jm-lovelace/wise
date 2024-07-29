@@ -71,6 +71,10 @@ import { ref, watch } from 'vue'
 
 const { signInWithFacebook, signInWithGoogle, signInWithEmailPassword, signUpWithEmailPassword, sendPasswordReset } = useFirebase();
 
+const emit = defineEmits<{
+    'signed-in': [value: boolean]
+}>();
+
 const tab = ref('login_methods');
 
 const loading = ref(false);
@@ -104,7 +108,7 @@ const signUserInEmail = async() => {
 
     loading.value = false;
 
-    emit('signed-in');
+    emit('signed-in', true);
 }
 
 const signUserUpEmail = async() => {
@@ -119,7 +123,7 @@ const signUserUpEmail = async() => {
 
     loading.value = false;
 
-    emit('signed-in');
+    emit('signed-in', true);
 }
 
 watch(tab, () => {

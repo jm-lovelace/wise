@@ -18,9 +18,22 @@ export type Tab = {
   index: number;
 }
 
+export type NotePage = {
+  id: string;
+  title: string;
+  owner: string;
+  collaborators: string[];
+  tags: string[];
+  date: string;
+  lastModified: string;
+  lastModifiedBy: string;
+  content: string;
+}
+
 export type AppState = {
   openTabs: Tab[],
-  activeTabs: string[]
+  activeTabs: string[],
+  notes: NotePage[]
 }
 
 export const readerManagers: { [key: string]: ReaderManager } = {};
@@ -30,7 +43,8 @@ export const useAppStore = defineStore('app', {
     openTabs: [],
     activeTabs: [
       "", ""
-    ]
+    ],
+    notes: []
   }),
 
   getters: {
