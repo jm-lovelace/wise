@@ -89,7 +89,7 @@ export default function useFirebase() {
         }
     }
 
-    const updateProfileInfo = async(email: string | null, displayName: string, photo: Blob) => {
+    const updateProfileInfo = async(email: string | null, displayName: string, photo?: Blob) => {
         const auth = getFirebaseAuth();
 
         if (auth == null)
@@ -199,7 +199,7 @@ export default function useFirebase() {
         }
     }
 
-    const signUpWithEmailPassword = async(email: string, password: string, displayName: string, photo: Blob) => {
+    const signUpWithEmailPassword = async(email: string, password: string, displayName: string, photo?: Blob) => {
         const auth = getFirebaseAuth();
 
         if (auth == null)
@@ -296,7 +296,7 @@ export default function useFirebase() {
         return docSnap.data();
     }
 
-    const setDocument = async(coll: string, document: DocumentReference) => {
+    const setDocument = async(coll: string, document: any) => {
         const db = getFirestore();
         if (document.id != null)
         {

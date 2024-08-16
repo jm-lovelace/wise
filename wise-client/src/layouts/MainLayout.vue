@@ -39,9 +39,7 @@
         </template>
 
         <template v-slot:after>
-
-          <h6>Side Panel</h6>
-
+          <AccountPanel v-if="sidePanelPage === SidePanelPage.Settings" />
         </template>
       </q-splitter>
     </q-page-container>
@@ -49,6 +47,7 @@
 </template>
 
 <script setup lang="ts">
+import AccountPanel from '../components/AccountPanel.vue';
 
 enum SidePanelPage {
   AIChat = 'ai_chat',

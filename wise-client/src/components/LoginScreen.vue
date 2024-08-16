@@ -2,13 +2,10 @@
     <q-tab-panels v-model="tab" animated>
         <q-tab-panel name="login_methods">
         <div class="row flex flex-center q-my-md">
-            <q-btn color="primary" label="Sign in with Email" @click="tab='login'" icon="fa-solid fa-envelope" />
+            <q-btn color="primary" label="Sign in with Email" @click="tab='login'" icon="email" />
         </div>
         <div class="row flex flex-center q-my-md">
-            <q-btn color="primary" label="Sign in with Google" @click="signInWithGoogle" icon="fa-brands fa-google" />
-        </div>
-        <div class="row flex flex-center q-my-md" v-if="false">
-            <q-btn color="primary" label="Sign in with Facebook" @click="signInWithFacebook" icon="fa-brands fa-facebook" />
+            <q-btn color="primary" label="Sign in with Google" @click="signInWithGoogle" />
         </div>
         </q-tab-panel>
         <q-tab-panel name="login">

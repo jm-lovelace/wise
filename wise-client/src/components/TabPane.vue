@@ -36,7 +36,7 @@
                         <q-item clickable v-close-popup @click="appStore.newReaderTab(paneNumber)">
                             <q-item-section>Chapter</q-item-section>
                         </q-item>
-                        <q-item clickable v-close-popup>
+                        <q-item clickable v-close-popup @click="appStore.newEditorTab(paneNumber)">
                             <q-item-section>Note Page</q-item-section>
                         </q-item>
                     </q-list>
@@ -52,17 +52,19 @@
             >
                 <ChapterView v-if="tab.type===TabType.Reader" :manager="readerManagers[tab.id]" @labelChanged="($evt) => tab.label = $evt" style="height: 100%" />
                 <ChapterSelection v-if="tab.type===TabType.ChapterSelection" @selected="chapterSelected" style="height: 100%" />
+                <NotesEditor v-if="tab.type===TabType.Notes" :manager="editorManagers[tab.id]" style="height: 100%" />
             </q-tab-panel>
         </q-tab-panels>
     </div>
 </template>
 
 <script setup lang="ts">
-import { useAppStore, readerManagers, TabType } from '../stores/app-store';
+import { useAppStore, readerManagers, editorManagers, TabType } from '../stores/app-store';
 import { storeToRefs } from 'pinia';
 import { computed, defineProps, onMounted } from 'vue';
 import ChapterView from './ChapterView.vue';
 import ChapterSelection from './ChapterSelection.vue';
+import NotesEditor from './NotesEditor.vue';
 
 interface TabPaneProps {
   paneNumber: number;

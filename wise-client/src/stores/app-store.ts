@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia';
 import { ReaderManager } from '../composables/useReaderManager';
+import { EditorManager } from '../composables/useEditorManager';
 import { v4 as uuidv4 } from 'uuid';
+import useFirebase from '../composables/useFirebase';
+import moment from 'moment';
 
 export enum TabType {
   Reader = "reader",
@@ -25,7 +28,7 @@ export type NotePage = {
   collaborators: string[];
   tags: string[];
   date: string;
-  lastModified: string;
+  lastModified: number;
   lastModifiedBy: string;
   content: string;
 }
@@ -37,6 +40,7 @@ export type AppState = {
 }
 
 export const readerManagers: { [key: string]: ReaderManager } = {};
+export const editorManagers: { [key: string]: EditorManager } = {};
 
 export const useAppStore = defineStore('app', {
   state: (): AppState => ({
@@ -46,11 +50,9 @@ export const useAppStore = defineStore('app', {
     ],
     notes: []
   }),
-
   getters: {
   
   },
-
   actions: {
     newReaderTab(pane: number) {
       const id = uuidv4();
@@ -63,6 +65,45 @@ export const useAppStore = defineStore('app', {
       };
 
       readerManagers[id] = (new ReaderManager(id));
+
+      this.openTabs.push(tab);
+      this.activeTabs[pane] = id
+    },
+    async newEditorTab(pane: number) {
+      const { user, setDocument } = useFirebase();
+
+      if (!user.value) {
+        return;
+      }
+
+      //create new note
+      const newNote: NotePage = {
+        id: uuidv4(),
+        title: "Untitled Note",
+        owner: user.value.id,
+        collaborators: [],
+        tags: [],
+        date: moment().format("YYYY-MM-DD"),
+        lastModified: Date.now(),
+        lastModifiedBy: user.value.id,
+        content: ""
+      }
+
+      await setDocument("notes", newNote);
+
+      //create tab
+      const id = uuidv4();
+      const tab: Tab = {
+        id: id,
+        type: TabType.Notes,
+        label: "",
+        pane: pane,
+        index: this.openTabs.filter(t => t.pane === pane).length
+      };
+
+      editorManagers[id] = (new EditorManager(id));
+
+      editorManagers[id].setEditorDocument(newNote.id)
 
       this.openTabs.push(tab);
       this.activeTabs[pane] = id
