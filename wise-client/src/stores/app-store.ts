@@ -1,9 +1,13 @@
 import { defineStore } from 'pinia';
 import { ReaderManager } from '../composables/useReaderManager';
 import { EditorManager } from '../composables/useEditorManager';
+import { NotePage } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import useFirebase from '../composables/useFirebase';
 import moment from 'moment';
+
+
+const { user, setDocument } = useFirebase();
 
 export enum TabType {
   Reader = "reader",
@@ -21,34 +25,21 @@ export type Tab = {
   index: number;
 }
 
-export type NotePage = {
-  id: string;
-  title: string;
-  owner: string;
-  collaborators: string[];
-  tags: string[];
-  date: string;
-  lastModified: number;
-  lastModifiedBy: string;
-  content: string;
-}
-
 export type AppState = {
   openTabs: Tab[],
-  activeTabs: string[],
-  notes: NotePage[]
+  activeTabs: string[]
 }
 
 export const readerManagers: { [key: string]: ReaderManager } = {};
 export const editorManagers: { [key: string]: EditorManager } = {};
+
 
 export const useAppStore = defineStore('app', {
   state: (): AppState => ({
     openTabs: [],
     activeTabs: [
       "", ""
-    ],
-    notes: []
+    ]
   }),
   getters: {
   
@@ -70,8 +61,6 @@ export const useAppStore = defineStore('app', {
       this.activeTabs[pane] = id
     },
     async newEditorTab(pane: number) {
-      const { user, setDocument } = useFirebase();
-
       if (!user.value) {
         return;
       }
@@ -86,7 +75,8 @@ export const useAppStore = defineStore('app', {
         date: moment().format("YYYY-MM-DD"),
         lastModified: Date.now(),
         lastModifiedBy: user.value.id,
-        content: ""
+        rawContent: "",
+        htmlContent: ""
       }
 
       await setDocument("notes", newNote);
@@ -117,9 +107,17 @@ export const useAppStore = defineStore('app', {
       const readerManager = readerManagers[id];
       if (readerManager) {
         delete readerManagers[id];
-      }
+      };
 
       this.openTabs.splice(this.openTabs.indexOf(tab), 1);
+    },
+    activateReaderTab(version: string, book: number, chapter: number, preferredPane: number) {
+      const id = this.openTabs.find(t.type === TabType.Reader)?.id;
+      if (!id) {
+        return;
+      }
+
+      readerManagers[id].loadChapter(version, book, chapter);
     }
   }
 });

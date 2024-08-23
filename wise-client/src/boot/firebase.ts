@@ -1,7 +1,9 @@
 import { boot } from 'quasar/wrappers'
 import useFirebase from '../composables/useFirebase'
+import { useNotesStore } from '../stores/notes-store';
+import { watch } from 'vue';
 
-const { initialize } = useFirebase();
+const { initialize, user } = useFirebase();
 
 const firebaseConfig = {
   apiKey: "AIzaSyBtAAsl4ztjqgft3A205T_mPj6zR9mJHBY",
@@ -19,5 +21,11 @@ initialize(firebaseConfig);
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
 export default boot(async (/* { app, router, ... } */) => {
-  // something to do
+  const store = useNotesStore();
+
+  watch(user, (newUser) => {
+    if (newUser) {
+      store.notesSubscribe();
+    }
+  });
 })

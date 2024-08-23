@@ -318,7 +318,7 @@ export default function useFirebase() {
 
     const collectionSubscribe = (coll: string, 
         filters: [{ field: string, operator: WhereFilterOp, value: string}], 
-        pagination: { limit: number, after: number }, order: { field: string, direction: OrderByDirection}, callback: Function) => {
+        pagination: { limit: number, after: number } | null, order: { field: string, direction: OrderByDirection} | null, callback: Function) => {
         const db = getFirestore();
         const whereStatements: QueryConstraint[] = filters.map(f => {
             return where(f.field, f.operator, f.value)
