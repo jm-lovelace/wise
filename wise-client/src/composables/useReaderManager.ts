@@ -26,6 +26,10 @@ export class ReaderManager {
         return books.find(b => b.id === this.currentBook.value)?.chapters ?? 1;
     });
 
+    public contentId = computed(() => { 
+        return `${this.currentVersion.value}-${this.currentBook.value}-${this.currentChapter.value}`;
+    });
+
     constructor(id: string) {
         this.id = id;
         this.store = useBibleStore();

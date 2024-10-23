@@ -61,7 +61,7 @@ interface ChapterViewProps {
 const props = defineProps<ChapterViewProps>();
 
 const emit = defineEmits<{
-  'labelChanged': [value: string]
+  'chapterChanged': [value: { contentId: string, label: string }]
 }>();
 
 const { 
@@ -74,6 +74,7 @@ const {
   currentBookChapters,
   selectedVerses,
   selectedVersesLabel,
+  contentId,
   loadChapter,
   toggleVerseRangeSelection,
   copySelectionToClipboard,
@@ -91,7 +92,10 @@ onMounted(async() => {
     resizeObserver.observe(rootElem.value);
   }
 
-  emit('labelChanged', chapterLabel.value);
+  emit('chapterChanged', {
+    contentId: contentId.value,
+    label: `${chapterLabel.value} (${currentVersion.value.toUpperCase()})`
+  });
 });
 
 onBeforeUnmount(() => {
@@ -104,9 +108,13 @@ const onResize = () => {
   height.value = rootElem.value.clientHeight || 0
 };
 
-watch(chapterLabel, () => {
-  emit('labelChanged', `${chapterLabel.value} (${currentVersion.value.toUpperCase()})`);
+watch(contentId, () => {
+  emit('chapterChanged', {
+    contentId: contentId.value,
+    label: `${chapterLabel.value} (${currentVersion.value.toUpperCase()})`
+  });
 });
+
 
 const currentVersionLabel = computed(() => {
   const version = versions.value.find(v => v.id === currentVersion.value);
@@ -117,13 +125,6 @@ const versionList = computed(() => {
   return versions.value.map(v => { return { ...v, label: `${versionNames[v.id]} (${v.id.toUpperCase()})` }});
 });
 
-const selectedLabel = computed(() => {
-  if (selectedVerses.value.length === 1) {
-    return `Selected: ${selectedVerses.value[0]}`;
-  } else {
-    return `Selected: ${selectedVerses.value[0]}-${selectedVerses.value[selectedVerses.value.length - 1]}`;
-  }
-});
 
 type RenderedItem = {
   type: string;

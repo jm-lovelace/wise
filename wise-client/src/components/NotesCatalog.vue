@@ -1,7 +1,7 @@
 <template>
     <div class="row">
         <q-list bordered separator>
-            <q-item clickable v-ripple v-for="(note, n) in filteredNotes" @click="activateNotePage">
+            <q-item clickable v-ripple v-for="(note, n) in filteredNotes" @click="appStore.activateEditorTab(note.id, 1)">
                 <q-item-section>
                     <q-item-label>
                         <q-icon name="note" />
@@ -17,12 +17,15 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useNotesStore } from '../stores/notes-store';
+import { useAppStore } from '../stores/app-store';
 import { storeToRefs } from 'pinia'
 import moment from 'moment';
 
 const tagFilters = ref([]);
 const searchFilter = ref('');
 const groupByTag = ref(false);
+
+const appStore = useAppStore();
 
 const notesStore = useNotesStore();
 const { notes } = storeToRefs(notesStore);
@@ -45,9 +48,5 @@ const filteredNotes = computed(() => {
         return true;
     });
 });
-
-const activateNotePage = (note) => {
-    
-};
 
 </script>

@@ -20,6 +20,7 @@ export enum TabType {
 export type Tab = {
   id: string;
   type: TabType;
+  contentId: string;
   label: string;
   pane: number;
   index: number;
@@ -27,7 +28,7 @@ export type Tab = {
 
 export type AppState = {
   openTabs: Tab[],
-  activeTabs: string[]
+  activeTabs: string[] // array of two tab ids, one for each pane
 }
 
 export const readerManagers: { [key: string]: ReaderManager } = {};
@@ -46,57 +47,63 @@ export const useAppStore = defineStore('app', {
   },
   actions: {
     newReaderTab(pane: number) {
-      const id = uuidv4();
+      const tabId = uuidv4();
+
+      readerManagers[tabId] = new ReaderManager(tabId);
+
       const tab: Tab = {
-        id: id,
+        id: tabId,
         type: TabType.ChapterSelection,
         label: "Select Chapter",
         pane: pane,
+        contentId: '',
         index: this.openTabs.filter(t => t.pane === pane).length
-      };
-
-      readerManagers[id] = (new ReaderManager(id));
+      }; 
 
       this.openTabs.push(tab);
-      this.activeTabs[pane] = id
+      this.activeTabs[pane] = tabId;
     },
-    async newEditorTab(pane: number) {
+    async newEditorTab(pane: number, noteId: string | null) {
       if (!user.value) {
         return;
       }
 
-      //create new note
-      const newNote: NotePage = {
-        id: uuidv4(),
-        title: "Untitled Note",
-        owner: user.value.id,
-        collaborators: [],
-        tags: [],
-        date: moment().format("YYYY-MM-DD"),
-        lastModified: Date.now(),
-        lastModifiedBy: user.value.id,
-        rawContent: "",
-        htmlContent: ""
+      if (!noteId) {
+        //create new note
+        const newNote: NotePage = {
+          id: uuidv4(),
+          title: "Untitled Note",
+          owner: user.value.id,
+          collaborators: [],
+          tags: [],
+          date: moment().format("YYYY-MM-DD"),
+          lastModified: Date.now(),
+          lastModifiedBy: user.value.id,
+          rawContent: "",
+          htmlContent: ""
+        }
+
+        await setDocument("notes", newNote);
+        noteId = newNote.id;
       }
 
-      await setDocument("notes", newNote);
-
       //create tab
-      const id = uuidv4();
+      const tabId = uuidv4();
       const tab: Tab = {
-        id: id,
+        id: tabId,
         type: TabType.Notes,
         label: "",
         pane: pane,
+        contentId: noteId,
         index: this.openTabs.filter(t => t.pane === pane).length
       };
 
-      editorManagers[id] = (new EditorManager(id));
+      editorManagers[tabId] = new EditorManager(tabId);
 
-      editorManagers[id].setEditorDocument(newNote.id)
+      editorManagers[tabId].setEditorDocument(noteId);
 
       this.openTabs.push(tab);
-      this.activeTabs[pane] = id
+      this.activeTabs[pane] = tabId;
     },
     closeTab(id: string) {
       const tab = this.openTabs.find(t => t.id === id);
@@ -104,20 +111,39 @@ export const useAppStore = defineStore('app', {
         return;
       }
 
-      const readerManager = readerManagers[id];
-      if (readerManager) {
+      if (id in readerManagers) {
         delete readerManagers[id];
+      };
+
+      if (id in editorManagers) {
+        delete editorManagers[id];
       };
 
       this.openTabs.splice(this.openTabs.indexOf(tab), 1);
     },
-    activateReaderTab(version: string, book: number, chapter: number, preferredPane: number) {
-      const id = this.openTabs.find(t.type === TabType.Reader)?.id;
+    activateTabByContent(type: TabType, contentId: string, pane: number | null) {
+      const id = this.openTabs.find(t => t.type === type && t.contentId === contentId && (!pane || t.pane === pane))?.id;
       if (!id) {
-        return;
+        return false;
       }
 
-      readerManagers[id].loadChapter(version, book, chapter);
+      this.activeTabs[pane ?? 0] = id;
+
+      return true;
+    },
+    activateReaderTab(version: string, book: number, chapter: number, pane: number | null) {
+      const contentId = `${version}-${book}-${chapter}`;
+      const success = this.activateTabByContent(TabType.Reader, contentId, pane);
+      if (!success) {
+        this.newReaderTab(pane ?? 0);
+        readerManagers[this.activeTabs[pane ?? 0]].loadChapter(version, book, chapter);
+      }
+    },
+    activateEditorTab(noteId: string, pane: number | null) {
+      const success = this.activateTabByContent(TabType.Notes, noteId, pane);
+      if (!success) {
+        this.newEditorTab(pane ?? 0, noteId);
+      }
     }
   }
 });

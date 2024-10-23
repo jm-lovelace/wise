@@ -36,7 +36,7 @@
                         <q-item clickable v-close-popup @click="appStore.newReaderTab(paneNumber)">
                             <q-item-section>Chapter</q-item-section>
                         </q-item>
-                        <q-item clickable v-close-popup @click="appStore.newEditorTab(paneNumber)">
+                        <q-item clickable v-close-popup @click="appStore.newEditorTab(paneNumber, null)">
                             <q-item-section>Note Page</q-item-section>
                         </q-item>
                     </q-list>
@@ -50,9 +50,20 @@
                 :name="tab.id"
                 style="height: 100%"
             >
-                <ChapterView v-if="tab.type===TabType.Reader" :manager="readerManagers[tab.id]" @labelChanged="($evt) => tab.label = $evt" style="height: 100%" />
+                <ChapterView 
+                    v-if="tab.type===TabType.Reader" 
+                    :manager="readerManagers[tab.id]" 
+                    @chapterChanged="($evt) => chapterChanged(tab.id, $evt)" 
+                    style="height: 100%" 
+                />
                 <ChapterSelection v-if="tab.type===TabType.ChapterSelection" @selected="chapterSelected" style="height: 100%" />
-                <NotesEditor v-if="tab.type===TabType.Notes" :manager="editorManagers[tab.id]" style="height: 100%" />
+                <NotesEditor 
+                    v-if="tab.type===TabType.Notes" 
+                    :manager="editorManagers[tab.id]" 
+                    @labelChanged="($evt) => tab.label = $evt" 
+                    @idChanged="($evt) => tab.contentId = $evt" 
+                    style="height: 100%" 
+                />
             </q-tab-panel>
         </q-tab-panels>
     </div>
@@ -81,7 +92,7 @@ const tabs = computed(() => {
 
     return _tabs;
 });
-``
+
 const activeTab = computed({
     get: () => activeTabs.value[props.paneNumber],
     set: (value: string) => {
@@ -103,6 +114,14 @@ const chapterSelected = async(version: string, book: number, chapter: number) =>
         await readerManagers[tab.id].loadChapter(version, book, chapter);
     }
 };
+
+const chapterChanged = (tabId: string, event: { contentId: string, label: string }) => {
+    const tab = tabs.value.find(tab => tab.id == tabId);
+    if (tab) {
+        tab.contentId = event.contentId;
+        tab.label = event.label;
+    }
+}
 
 onMounted(() => {
 
