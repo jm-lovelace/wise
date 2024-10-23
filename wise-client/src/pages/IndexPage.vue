@@ -15,7 +15,7 @@
       </template>
 
       <template v-slot:after>
-        <NotesEditor style="height: 90vh" />
+        <TabPane :paneNumber="1" style="height: 100vh" />
       </template>
     </q-splitter>
   </q-page>
@@ -24,14 +24,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import TabPane from '../components/TabPane.vue';
-import NotesEditor from '../components/NotesEditor.vue';
-import { ReaderManager } from '../composables/useReaderManager';
-import { useBibleStore } from '../stores/bible-store';
 import { useAppStore } from '../stores/app-store';
-
-let manager: ReaderManager | null = null;
-
-const bibleStore = useBibleStore();
 
 const appStore = useAppStore();
 

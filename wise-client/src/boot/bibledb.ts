@@ -8,4 +8,8 @@ export default boot(async (/* { app, router, ... } */) => {
 
   const store = useBibleStore();
   await store.loadVersions();
+
+  if (store.versions.length === 0) {
+    await store.downloadVersion('esv');
+  }
 })
