@@ -21,16 +21,29 @@ export const useNotesStore = defineStore('notes', {
     notes: []
   }),
   getters: {
-    
+    allTags: (state) => {
+      let tags: string[] = [];
+      state.notes.forEach(note => {
+        note.tags.forEach(tag => {
+          if (!tags.includes(tag)) {
+            tags.push(tag);
+          }
+        });
+      });
+
+      tags.sort();
+
+      return tags;
+    }
   },
   actions: {
     notesSubscribe() {
-      if (!user.value) {
-        return
-      }
-
       if (notes_unsub !== null) {
         notes_unsub();
+      }
+
+      if (!user.value) {
+        return
       }
 
       notes_unsub = collectionSubscribe("notes",

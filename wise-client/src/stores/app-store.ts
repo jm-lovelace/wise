@@ -7,7 +7,7 @@ import useFirebase from '../composables/useFirebase';
 import moment from 'moment';
 
 
-const { user, setDocument } = useFirebase();
+const { user, setDocument, documentSubscribe, documentExists } = useFirebase();
 
 export enum TabType {
   Reader = "reader",
@@ -26,13 +26,21 @@ export type Tab = {
   index: number;
 }
 
+export type UserSettings = {
+  id: string,
+  tagColors: { [key: string]: string }
+}
+
 export type AppState = {
   openTabs: Tab[],
-  activeTabs: string[] // array of two tab ids, one for each pane
+  activeTabs: string[], // array of two tab ids, one for each pane
+  userSettings: UserSettings
 }
 
 export const readerManagers: { [key: string]: ReaderManager } = {};
 export const editorManagers: { [key: string]: EditorManager } = {};
+
+let user_settings_unsub: (() => void) | null = null;
 
 
 export const useAppStore = defineStore('app', {
@@ -40,7 +48,11 @@ export const useAppStore = defineStore('app', {
     openTabs: [],
     activeTabs: [
       "", ""
-    ]
+    ],
+    userSettings: {
+      id: "",
+      tagColors: {}
+    }
   }),
   getters: {
   
@@ -82,6 +94,8 @@ export const useAppStore = defineStore('app', {
           rawContent: "",
           htmlContent: ""
         }
+
+        console.log(newNote);
 
         await setDocument("notes", newNote);
         noteId = newNote.id;
@@ -144,6 +158,32 @@ export const useAppStore = defineStore('app', {
       if (!success) {
         this.newEditorTab(pane ?? 0, noteId);
       }
+    },
+    async userSettingsSubscribe() {
+      if (user_settings_unsub !== null) {
+        user_settings_unsub();
+      }
+
+      this.userSettings = {
+        id: "",
+        tagColors: {}
+      }
+
+      if (!user.value) {
+        return
+      }
+
+      const userSettingsExists = await documentExists("users", user.value.id);
+      if (!userSettingsExists) {
+        await setDocument("users", {
+          id: user.value.id,
+          tagColors: {}
+        });
+      }
+
+      user_settings_unsub = documentSubscribe("users", user.value.id, (settings: UserSettings) => {
+        this.userSettings = settings;
+      });
     }
   }
 });

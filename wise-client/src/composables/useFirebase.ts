@@ -296,6 +296,12 @@ export default function useFirebase() {
         return docSnap.data();
     }
 
+    const documentExists = async (coll: string, docId: string): Promise<boolean> => {
+        const db = getFirestore();
+        const docSnap = await getDoc(doc(db, coll, docId));
+        return docSnap.exists();
+    };
+
     const setDocument = async(coll: string, document: any) => {
         const db = getFirestore();
         if (document.id != null)
@@ -435,6 +441,7 @@ export default function useFirebase() {
         getDocuments,
         setDocument,
         deleteDocument,
+        documentExists,
         collectionSubscribe,
         documentSubscribe,
         callFunction,

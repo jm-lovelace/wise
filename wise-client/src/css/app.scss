@@ -4,3 +4,35 @@
 body {
   font-family: 'Inter', Verdana, sans-serif;
 }
+
+.body--light {
+  --q-primary: #6a7062;
+  --q-secondary: #e8e8ec;
+  --q-accent: #8d909b;
+  --q-positive: #6ba539;
+  --q-negative: #f54029;
+  --q-info: #3888ff;
+  --q-warning: #f7b50c;
+}
+
+.body--dark {
+  --q-primary: #3888ff;
+  --q-secondary: #e8e8ec;
+  --q-accent: #d0ff90;
+  --q-positive: #6ba539;
+  --q-negative: #f54029;
+  --q-info: #3888ff;
+  --q-warning: #f7b50c;   
+}
+
+body.body--dark {
+  background: #00143c
+}
+
+body.body--light {
+  background: #fcfcfa
+}
+
+.ProseMirror:focus {
+  outline: none;
+}

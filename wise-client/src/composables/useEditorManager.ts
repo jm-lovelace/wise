@@ -2,7 +2,7 @@ import { Editor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import useFirebase from '../composables/useFirebase'
 import { NotePage } from '../types'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const { documentSubscribe, setDocument, user } = useFirebase();
 
@@ -18,6 +18,12 @@ export class EditorManager {
 
     public contentId = ref('');
     public title = ref('');
+    public date = ref('');
+    public tags = ref<string[]>([]);
+
+    public noteCreated = computed(() => {
+        return this.note?.date
+    })
 
     constructor(tabId: string) {
         this.tabId = tabId;
@@ -28,6 +34,11 @@ export class EditorManager {
             ],
             content: "",
             editable: false,
+            editorProps: {
+                attributes: {
+                    style: "height: 100%"
+                }
+            },
             onUpdate: async({ editor }) => {
                 if (!this.note || !user.value) {
                     return;
@@ -40,6 +51,9 @@ export class EditorManager {
                 this.saveTimeout = setTimeout(async () => {
                     await setDocument("notes", {
                         ...this.note,
+                        title: this.title.value,
+                        date: this.date.value,
+                        tags: this.tags.value,
                         lastModified: Date.now(),
                         lastModifiedBy: user.value?.id ?? "",
                         htmlContent: editor.getHTML(),
@@ -64,6 +78,8 @@ export class EditorManager {
         this.unsubscribe = await documentSubscribe("notes", docId, (doc: NotePage) => {
             this.note = doc;
             this.title.value = doc.title;
+            this.date.value = doc.date;
+            this.tags.value = doc.tags;
             this.EDITOR.commands.setContent(doc.htmlContent, false);
         });
     }

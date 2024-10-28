@@ -21,9 +21,10 @@
           </q-item-section>
           <q-tooltip>Your Notes</q-tooltip>
         </q-item>
-
-      
       </q-list>
+      <q-btn icon="dark_mode" flat class="absolute-bottom q-py-md" @click="$q.dark.toggle()" :text-color="$q.dark.isActive ? 'accent' : undefined">
+        <q-tooltip>Toggle Dark Mode</q-tooltip>
+      </q-btn>
     </q-drawer>
 
     <q-page-container>
@@ -50,6 +51,8 @@
 <script setup lang="ts">
 import AccountPanel from '../components/AccountPanel.vue';
 import NotesCatalog from '../components/NotesCatalog.vue';
+import { useQuasar } from 'quasar';
+import { ref, watch, computed } from 'vue';
 
 enum SidePanelPage {
   AIChat = 'ai_chat',
@@ -57,7 +60,7 @@ enum SidePanelPage {
   Settings = 'settings'
 }
 
-import { ref, watch, computed } from 'vue';
+const $q = useQuasar();
 
 const sidebar = ref(true);
 const sidePanel = ref(false);
@@ -80,7 +83,12 @@ const toggleSidePanel = () => {
 };
 
 const activateSidePanelPage = (page: SidePanelPage) => {
-  toggleSidePanel();
+  if (sidePanelPage.value === page) {
+    toggleSidePanel();
+    return;
+  }
+
+  sidePanel.value = true;
   if (sidePanel.value) {
     sidePanelPage.value = page;
   }

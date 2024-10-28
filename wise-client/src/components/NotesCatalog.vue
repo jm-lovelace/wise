@@ -1,16 +1,28 @@
 <template>
-    <div class="row">
-        <q-list bordered separator>
-            <q-item clickable v-ripple v-for="(note, n) in filteredNotes" @click="appStore.activateEditorTab(note.id, 1)">
-                <q-item-section>
-                    <q-item-label>
+    <div>
+        <q-toolbar>
+            <q-toolbar-title>
+            Notebook
+            </q-toolbar-title>
+        </q-toolbar>
+        <div class="row q-mx-sm q-my-sm">
+            <q-input dense filled v-model="searchFilter" placeholder="Search" style="width: 100%" />
+        </div>
+        <div class="row">
+            <q-list bordered separator style="width: 100%" class="q-mx-sm">
+                <q-item clickable v-ripple v-for="(note, n) in filteredNotes" @click="appStore.activateEditorTab(note.id, 1)">
+                    <q-item-section side>
                         <q-icon name="note" />
-                        <q-item-label>{{ note.title }}</q-item-label>
-                        <q-item-label caption>{{ formatLastModified(note.lastModified) }}</q-item-label>
-                    </q-item-label>
-                </q-item-section>
-            </q-item>
-        </q-list>
+                    </q-item-section>
+                    <q-item-section>
+                        <q-item-label>
+                            <q-item-label>{{ note.title }}</q-item-label>
+                            <q-item-label caption>{{ formatLastModified(note.lastModified) }}</q-item-label>
+                        </q-item-label>
+                    </q-item-section>
+                </q-item>
+            </q-list>
+        </div>
     </div>
 </template>
 
